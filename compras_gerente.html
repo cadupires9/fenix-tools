@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Necessidades de Compra · Fênix</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --surface3: #e8e4db;
+  --border: #ddd9d0;
+  --border2: #ccc8be;
+  --text: #1a1916;
+  --muted: #8a8680;
+  --muted2: #b5b0a8;
+  --orange: #d96f28;
+  --orange-dim: rgba(217,111,40,0.1);
+  --green: #2e7d52;
+  --green-dim: rgba(46,125,82,0.1);
+  --red: #bf3a2b;
+  --red-dim: rgba(191,58,43,0.08);
+  --yellow: #b8860b;
+  --blue: #2f5c9e;
+  --font: 'Figtree', sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --sf: #d96f28;
+  --f219: #b8860b;
+  --nf: #2e7d52;
+  --ac: #2f5c9e;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; display:flex; flex-direction:column; }
+
+/* ── TELA DE LOGIN ── */
+#tela-login {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  z-index:999;
+}
+.login-box {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:48px 56px;
+  width:480px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.08);
+}
+.login-brand {
+  font-family:var(--display);
+  font-size:28px;
+  letter-spacing:0.06em;
+  margin-bottom:4px;
+}
+.login-brand em { color:var(--orange); font-style:normal; }
+.login-sub { font-size:13px; color:var(--muted); margin-bottom:32px; }
+.login-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:8px; display:block; }
+.login-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px; margin-bottom:24px;
+}
+.loja-card {
+  background:var(--bg);
+  border:2px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+  cursor:pointer;
+  transition:all 0.15s;
+  display:flex; align-items:center; gap:10px;
+}
+.loja-card:hover { border-color:var(--border2); background:var(--surface2); }
+.loja-card.selected { border-color:var(--loja-cor); background:var(--orange-dim); }
+.loja-card-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.loja-card-info { }
+.loja-card-nome { font-weight:700; font-size:13px; }
+.loja-card-local { font-size:11px; color:var(--muted); margin-top:1px; }
+.btn-entrar {
+  width:100%;
+  background:var(--orange);
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:14px;
+  font-family:var(--font);
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:opacity 0.15s;
+}
+.btn-entrar:hover { opacity:0.88; }
+.btn-entrar:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* ── APP ── */
+#app { display:none; flex:1; flex-direction:column; overflow:hidden; }
+
+/* TOPBAR */
+.topbar {
+  height:52px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 24px; gap:20px;
+  flex-shrink:0;
+}
+.topbar-logo { font-family:var(--display); font-size:22px; letter-spacing:0.04em; line-height:1; }
+.topbar-logo em { font-style:normal; }
+.topbar-divider { width:1px; height:24px; background:var(--border); }
+.topbar-loja { display:flex; align-items:center; gap:8px; }
+.topbar-dot { width:9px; height:9px; border-radius:50%; }
+.topbar-loja-nome { font-weight:700; font-size:14px; }
+.topbar-loja-local { font-size:11px; color:var(--muted); }
+.topbar-spacer { flex:1; }
+.topbar-sol-info { font-family:var(--mono); font-size:11px; color:var(--muted); text-align:right; }
+.topbar-sol-info strong { display:block; color:var(--text); font-size:12px; }
+
+.topbar-btn {
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:0 14px; height:32px;
+  border-radius:6px;
+  font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+  cursor:pointer; transition:all 0.12s;
+  display:flex; align-items:center; gap:6px;
+}
+.topbar-btn:hover { border-color:var(--border2); background:var(--surface2); }
+.topbar-btn.primary { background:var(--orange); color:white; border-color:var(--orange); }
+.topbar-btn.primary:hover { opacity:0.88; }
+.topbar-btn.primary:disabled { opacity:0.35; cursor:not-allowed; }
+.topbar-btn.ghost-danger { color:var(--red); border-color:rgba(191,58,43,0.3); }
+.topbar-btn.ghost-danger:hover { background:var(--red-dim); border-color:var(--red); }
+
+/* WORKSPACE 2 COLUNAS */
+.workspace { flex:1; display:grid; grid-template-columns:380px 1fr; overflow:hidden; }
+
+/* PAINEL ESQUERDO — FORMULÁRIO */
+.form-panel {
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.form-panel-header {
+  padding:18px 24px 14px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.form-panel-title { font-family:var(--display); font-size:20px; letter-spacing:0.03em; line-height:1; margin-bottom:3px; }
+.form-panel-title em { color:var(--orange); font-style:normal; }
+.form-panel-sub { font-size:12px; color:var(--muted); }
+
+.form-body { flex:1; overflow-y:auto; padding:20px 24px; }
+
+.field { margin-bottom:14px; }
+.field label { display:block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.09em; color:var(--muted); margin-bottom:6px; }
+.field input, .field select {
+  width:100%;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  padding:10px 12px;
+  font-family:var(--font); font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.12s;
+  -webkit-appearance:none;
+}
+.field input:focus, .field select:focus { border-color:var(--orange); background:white; }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.field-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+.total-preview {
+  background:var(--orange-dim);
+  border:1px solid rgba(217,111,40,0.2);
+  border-radius:8px;
+  padding:12px 14px;
+  margin-bottom:14px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.total-preview-label { font-family:var(--mono); font-size:10px; color:var(--orange); text-transform:uppercase; letter-spacing:0.08em; }
+.total-preview-val { font-family:var(--mono); font-size:16px; font-weight:500; color:var(--orange); }
+
+.form-panel-footer {
+  padding:16px 24px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  display:flex; gap:10px;
+}
+.btn-add {
+  flex:1;
+  background:var(--text);
+  color:var(--bg);
+  border:none; border-radius:7px;
+  padding:12px;
+  font-family:var(--font); font-size:14px; font-weight:700;
+  cursor:pointer; transition:opacity 0.12s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-add:hover { opacity:0.85; }
+.btn-clear {
+  background:var(--bg); border:1.5px solid var(--border);
+  border-radius:7px; padding:12px 16px;
+  font-family:var(--font); font-size:13px; color:var(--muted);
+  cursor:pointer; transition:all 0.12s;
+}
+.btn-clear:hover { border-color:var(--border2); color:var(--text); }
+
+/* PAINEL DIREITO — LISTA */
+.list-panel {
+  background:var(--bg);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.list-panel-header {
+  padding:14px 24px 12px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0;
+}
+.list-panel-title { font-family:var(--display); font-size:18px; letter-spacing:0.03em; line-height:1; }
+.list-panel-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.list-panel-stats { display:flex; gap:20px; }
+.list-stat { text-align:right; }
+.list-stat-label { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+.list-stat-val { font-family:var(--mono); font-size:14px; font-weight:500; margin-top:1px; }
+.list-stat-val.orange { color:var(--orange); }
+
+/* TABELA */
+.list-body { flex:1; overflow-y:auto; }
+.items-table { width:100%; border-collapse:collapse; }
+.items-table th {
+  font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.08em;
+  color:var(--muted); padding:10px 16px; text-align:left;
+  border-bottom:1px solid var(--border);
+  background:var(--surface); position:sticky; top:0; z-index:5;
+}
+.items-table th:last-child { text-align:center; }
+.items-table td { padding:12px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.items-table tr { background:var(--surface); transition:background 0.1s; }
+.items-table tr:hover td { background:var(--surface2); }
+
+/* Linhas aprovadas/negadas (readonly) */
+.items-table tr.aprovado td { background:rgba(46,125,82,0.04); }
+.items-table tr.negado td { background:rgba(191,58,43,0.04); opacity:0.55; }
+.items-table tr.ajustado td { background:rgba(184,134,11,0.04); }
+
+.item-nome-cell { font-weight:600; font-size:13px; }
+.item-cat-tag { font-family:var(--mono); font-size:9px; color:var(--muted); background:var(--surface2); padding:2px 6px; border-radius:3px; margin-top:3px; display:inline-block; }
+.mono-cell { font-family:var(--mono); font-size:12px; }
+.price-cell { font-family:var(--mono); font-size:12px; color:var(--orange); }
+.muted-cell { font-family:var(--mono); font-size:12px; color:var(--muted); }
+.del-btn { background:none; border:none; color:var(--muted2); cursor:pointer; font-size:16px; padding:4px 8px; border-radius:4px; transition:all 0.12s; display:block; margin:0 auto; }
+.del-btn:hover { color:var(--red); background:var(--red-dim); }
+
+/* STATUS BADGES */
+.sbadge { font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:0.05em; padding:3px 8px; border-radius:3px; }
+.sbadge-pendente { background:var(--surface3); color:var(--muted); }
+.sbadge-aprovado { background:var(--green-dim); color:var(--green); }
+.sbadge-negado { background:var(--red-dim); color:var(--red); }
+.sbadge-ajustado { background:rgba(184,134,11,0.12); color:var(--yellow); }
+
+/* EMPTY */
+.empty-state {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  color:var(--muted2); padding:48px; text-align:center;
+}
+.empty-icon { font-size:48px; margin-bottom:16px; opacity:0.5; }
+.empty-txt { font-size:13px; line-height:1.6; }
+
+/* STATUS BAR INFERIOR */
+.status-bar {
+  padding:10px 24px;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; gap:16px;
+  flex-shrink:0;
+}
+.sol-status-pill {
+  font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+  padding:4px 10px; border-radius:4px;
+}
+.sol-status-rascunho { background:var(--surface3); color:var(--muted); }
+.sol-status-enviada { background:rgba(47,92,158,0.12); color:var(--blue); }
+.sol-status-aprovada { background:var(--green-dim); color:var(--green); }
+.status-bar-id { font-family:var(--mono); font-size:11px; color:var(--muted); }
+.status-bar-spacer { flex:1; }
+.status-bar-msg { font-size:12px; color:var(--muted); }
+
+/* MODAL ENVIAR */
+.modal-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.35);
+  z-index:200; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:32px 36px;
+  width:440px; max-width:95vw;
+  box-shadow:0 20px 60px rgba(0,0,0,0.12);
+  animation:modalIn 0.2s ease;
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+.modal-title { font-family:var(--display); font-size:24px; letter-spacing:0.03em; margin-bottom:6px; }
+.modal-title em { color:var(--orange); font-style:normal; }
+.modal-sub { font-size:13px; color:var(--muted); margin-bottom:24px; line-height:1.5; }
+.modal-summary {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:8px; padding:16px; margin-bottom:24px;
+}
+.modal-summary-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+.modal-summary-row:last-child { margin-bottom:0; font-weight:700; font-size:14px; color:var(--orange); }
+.modal-summary-row span:first-child { color:var(--muted); }
+.modal-actions { display:flex; gap:10px; }
+.modal-btn { flex:1; padding:13px; border-radius:7px; font-family:var(--font); font-size:14px; font-weight:700; cursor:pointer; border:none; transition:opacity 0.12s; }
+.modal-btn.confirm { background:var(--orange); color:white; }
+.modal-btn.confirm:hover { opacity:0.88; }
+.modal-btn.cancel { background:var(--bg); border:1.5px solid var(--border); color:var(--muted); font-weight:500; }
+.modal-btn.cancel:hover { border-color:var(--border2); color:var(--text); }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:20px; right:24px;
+  background:var(--text); color:var(--bg);
+  padding:10px 18px; border-radius:6px;
+  font-family:var(--mono); font-size:11px;
+  z-index:999; opacity:0; transform:translateY(8px);
+  transition:all 0.2s; pointer-events:none; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.ok { background:var(--green); color:white; }
+.toast.err { background:var(--red); color:white; }
+
+/* SCROLL */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+/* HISTÓRICO CARDS */
+.hist-card {
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:10px;
+  overflow:hidden;
+  transition:border-color 0.15s;
+}
+.hist-card:hover { border-color:var(--border2); }
+.hist-card-header {
+  padding:14px 16px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer;
+  background:var(--bg);
+  transition:background 0.12s;
+  user-select:none;
+}
+.hist-card-header:hover { background:var(--surface2); }
+.hist-card-id { font-family:var(--mono); font-size:11px; color:var(--muted); min-width:36px; }
+.hist-card-info { flex:1; }
+.hist-card-data { font-size:12px; color:var(--muted); margin-top:2px; font-family:var(--mono); }
+.hist-card-stats { font-family:var(--mono); font-size:11px; color:var(--muted); text-align:right; }
+.hist-card-stats strong { display:block; color:var(--orange); font-size:13px; }
+.hist-card-chevron {
+  font-size:12px; color:var(--muted);
+  transition:transform 0.2s;
+  flex-shrink:0;
+}
+.hist-card.open .hist-card-chevron { transform:rotate(180deg); }
+
+.hist-card-body {
+  display:none;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+}
+.hist-card.open .hist-card-body { display:block; }
+
+.hist-itens-table { width:100%; border-collapse:collapse; }
+.hist-itens-table th {
+  font-family:var(--mono); font-size:9px; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--muted);
+  padding:8px 14px; text-align:left;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.hist-itens-table td {
+  padding:10px 14px; border-bottom:1px solid var(--border);
+  font-size:12px; vertical-align:middle;
+}
+.hist-itens-table tr:last-child td { border-bottom:none; }
+.hist-itens-table tr.aprovado td { background:rgba(46,125,82,0.03); }
+.hist-itens-table tr.negado td { opacity:0.5; }
+.hist-itens-table tr.ajustado td { background:rgba(184,134,11,0.03); }
+.hist-prod-nome { font-weight:600; font-size:13px; }
+.hist-cat-sub { font-family:var(--mono); font-size:10px; color:var(--orange); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+.hist-empty { padding:20px; text-align:center; color:var(--muted); font-size:12px; }
+
+/* READONLY MODE overlay no form */
+.form-blocked-overlay {
+  display:none;
+  position:absolute; inset:0;
+  background:rgba(247,245,240,0.85);
+  z-index:10;
+  align-items:center; justify-content:center;
+  flex-direction:column; gap:12px;
+  text-align:center; padding:32px;
+  font-size:13px; color:var(--muted);
+}
+.form-blocked-overlay.show { display:flex; }
+.form-blocked-icon { font-size:36px; }
+.form-panel { position:relative; }
+</style>
+</head>
+<body>
+
+<!-- TELA LOGIN -->
+<div id="tela-login">
+  <div class="login-box">
+    <div class="login-brand">NECESSIDADES <em>DE COMPRA</em></div>
+    <div class="login-sub">Selecione a sua loja para continuar</div>
+    <span class="login-label">Loja</span>
+    <div class="login-grid" id="login-grid">
+      <div class="loja-card" onclick="selecionarLoja('Super Fênix','Santa Isabel','#d96f28',this)" style="--loja-cor:#d96f28">
+        <div class="loja-card-dot" style="background:#d96f28"></div>
+        <div class="loja-card-info"><div class="loja-card-nome">Super Fênix</div><div class="loja-card-local">Santa Isabel</div></div>
+      </div>
+      <div class="loja-card" onclick="selecionarLoja('Fênix 219','Neves','#b8860b',this)" style="--loja-cor:#b8860b">
+        <div class="loja-card-dot" style="background:#b8860b"></div>
+        <div class="loja-card-info"><div class="loja-card-nome">Fênix 219</div><div class="loja-card-local">Neves</div></div>
+      </div>
+      <div class="loja-card" onclick="selecionarLoja('Nova Fênix','Porto do Rosa','#2e7d52',this)" style="--loja-cor:#2e7d52">
+        <div class="loja-card-dot" style="background:#2e7d52"></div>
+        <div class="loja-card-info"><div class="loja-card-nome">Nova Fênix</div><div class="loja-card-local">Porto do Rosa</div></div>
+      </div>
+      <div class="loja-card" onclick="selecionarLoja('Acácia','Porto da Pedra','#2f5c9e',this)" style="--loja-cor:#2f5c9e">
+        <div class="loja-card-dot" style="background:#2f5c9e"></div>
+        <div class="loja-card-info"><div class="loja-card-nome">Acácia</div><div class="loja-card-local">Porto da Pedra</div></div>
+      </div>
+    </div>
+    <button class="btn-entrar" id="btn-entrar" disabled onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">FÊNIX <em id="topbar-loja-nome" style="color:var(--orange)"></em></div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-loja">
+      <div class="topbar-dot" id="topbar-dot"></div>
+      <div>
+        <div class="topbar-loja-nome" id="topbar-nome"></div>
+        <div class="topbar-loja-local" id="topbar-local"></div>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-sol-info">
+      <strong id="topbar-sol-id">—</strong>
+      Solicitação atual
+    </div>
+    <div class="topbar-divider"></div>
+    <button class="topbar-btn" onclick="showHistorico()">Histórico</button>
+    <button class="topbar-btn primary" id="btn-enviar-top" onclick="abrirModalEnviar()">Enviar para aprovação →</button>
+  </div>
+
+  <div class="workspace">
+    <!-- FORMULÁRIO -->
+    <div class="form-panel">
+      <div class="form-blocked-overlay" id="form-blocked">
+        <div class="form-blocked-icon">🔒</div>
+        <div>
+          <strong>Solicitação enviada</strong><br>
+          Esta lista já foi enviada para aprovação.<br>
+          Aguarde o retorno do Cadu.
+        </div>
+        <button class="topbar-btn" onclick="novaSolicitacao()" style="margin-top:8px">+ Nova Solicitação</button>
+      </div>
+
+      <div class="form-panel-header">
+        <div class="form-panel-title">Adicionar <em>Produto</em></div>
+        <div class="form-panel-sub">Preencha os dados e clique em "Adicionar à lista"</div>
+      </div>
+
+      <div class="form-body">
+        <div class="field">
+          <label>Nome do Produto</label>
+          <input type="text" id="f-produto" placeholder="Ex: Leite Integral Italac 1L" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="f-categoria">
+            <option value="">Selecione a categoria...</option>
+            <option>Mercearia Seca</option>
+            <option>Frios e Laticínios</option>
+            <option>Carnes</option>
+            <option>Limpeza e Higiene</option>
+            <option>Bebidas</option>
+            <option>Bazar e Utilidades</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fornecedor / Vendedor</label>
+          <input type="text" id="f-fornecedor" placeholder="Nome do fornecedor ou vendedor" autocomplete="off">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Estoque Atual (un)</label>
+            <input type="number" id="f-estoque" placeholder="0" min="0">
+          </div>
+          <div class="field">
+            <label>Quantidade a Pedir</label>
+            <input type="number" id="f-qtd" placeholder="0" min="1">
+          </div>
+        </div>
+        <div class="field">
+          <label>Preço do Vendedor (R$)</label>
+          <input type="number" id="f-preco" placeholder="0,00" step="0.01" min="0" oninput="atualizarPreview()">
+        </div>
+
+        <div class="total-preview" id="total-preview" style="display:none">
+          <div class="total-preview-label">Total estimado deste item</div>
+          <div class="total-preview-val" id="total-preview-val">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="form-panel-footer">
+        <button class="btn-clear" onclick="limparForm()">Limpar</button>
+        <button class="btn-add" onclick="adicionarItem()">
+          <span>+</span> Adicionar à Lista
+        </button>
+      </div>
+    </div>
+
+    <!-- LISTA -->
+    <div class="list-panel">
+      <div class="list-panel-header">
+        <div>
+          <div class="list-panel-title">Lista da Semana</div>
+          <div class="list-panel-sub" id="list-sub">Produtos adicionados aparecem aqui</div>
+        </div>
+        <div class="list-panel-stats">
+          <div class="list-stat">
+            <div class="list-stat-label">Itens</div>
+            <div class="list-stat-val" id="stat-itens">0</div>
+          </div>
+          <div class="list-stat">
+            <div class="list-stat-label">Total Est.</div>
+            <div class="list-stat-val orange" id="stat-total">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-body" id="list-body">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">🛒</div>
+          <div class="empty-txt">Nenhum produto adicionado ainda.<br>Use o formulário ao lado para começar.</div>
+        </div>
+        <table class="items-table" id="items-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Fornecedor</th>
+              <th>Estoque</th>
+              <th>Qtd Pedida</th>
+              <th>Preço Unit.</th>
+              <th>Total Est.</th>
+              <th>Status</th>
+              <th>Qtd Aprov.</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-items"></tbody>
+        </table>
+      </div>
+
+      <div class="status-bar">
+        <span class="sol-status-pill sol-status-rascunho" id="sol-status-pill">Rascunho</span>
+        <span class="status-bar-id" id="sol-id-bar">—</span>
+        <div class="status-bar-spacer"></div>
+        <span class="status-bar-msg" id="status-bar-msg">Adicione produtos e envie para aprovação</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENVIAR -->
+<div class="modal-overlay" id="modal-enviar">
+  <div class="modal">
+    <div class="modal-title">Enviar para <em>Aprovação</em></div>
+    <div class="modal-sub">Após o envio, a lista ficará bloqueada para edição. O Cadu receberá a solicitação e você verá o resultado aqui.</div>
+    <div class="modal-summary" id="modal-summary"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-btn confirm" onclick="enviarSolicitacao()">Confirmar Envio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTÓRICO -->
+<div class="modal-overlay" id="modal-hist">
+  <div class="modal" style="width:820px;max-width:96vw">
+    <div class="modal-title">Histórico de <em>Solicitações</em></div>
+    <div id="hist-body" style="max-height:560px;overflow-y:auto;margin:16px 0"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" style="flex:none;padding:12px 24px" onclick="fecharModal('modal-hist')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://ccdlreblkvgnidtwinkz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fUFSIIZ0L8BXehhezAFQ6A_fsQ0b9pv';
+
+const LOJA_CORES = { 'Super Fênix':'#d96f28','Fênix 219':'#b8860b','Nova Fênix':'#2e7d52','Acácia':'#2f5c9e' };
+
+let lojaAtual=null, lojaLocal=null, lojaCor=null;
+let solAtual=null, itensAtual=[];
+let lojaCardSelecionado=null;
+
+// ── API ──
+async function req(path,method='GET',body=null){
+  const opts={method,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(SUPABASE_URL+path,opts);
+  if(!r.ok) throw new Error(await r.text());
+  const t=await r.text(); return t?JSON.parse(t):[];
+}
+
+// ── LOGIN ──
+function selecionarLoja(nome,local,cor,card){
+  document.querySelectorAll('.loja-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  lojaAtual=nome; lojaLocal=local; lojaCor=cor;
+  document.getElementById('btn-entrar').disabled=false;
+}
+
+async function entrar(){
+  const btn=document.getElementById('btn-entrar');
+  btn.disabled=true; btn.textContent='Carregando...';
+  try {
+    // Topbar
+    document.getElementById('topbar-loja-nome').textContent=lojaAtual.replace('Fênix','').replace('Nova','').trim();
+    document.getElementById('topbar-dot').style.background=lojaCor;
+    document.getElementById('topbar-nome').textContent=lojaAtual;
+    document.getElementById('topbar-local').textContent=lojaLocal;
+    document.getElementById('topbar-loja-nome').style.color=lojaCor;
+
+    await carregarOuCriarSolicitacao();
+    document.getElementById('tela-login').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('f-produto').focus();
+  } catch(e){
+    console.error('Erro detalhado:', e);
+    toast('Erro: ' + (e.message || e), 'err');
+    btn.disabled=false; btn.textContent='Entrar';
+  }
+}
+
+// ── SUPABASE ──
+async function carregarOuCriarSolicitacao(){
+  const data=await req(`/rest/v1/compras_solicitacoes?loja=eq.${encodeURIComponent(lojaAtual)}&status=in.(rascunho,enviada,aprovada)&order=criado_em.desc&limit=1`);
+  if(data.length>0){ solAtual=data[0]; await carregarItens(); }
+  else await criarNovaSolicitacao();
+}
+
+async function criarNovaSolicitacao(){
+  const nova=await req('/rest/v1/compras_solicitacoes','POST',{loja:lojaAtual,status:'rascunho',criado_em:new Date().toISOString()});
+  solAtual=nova[0]; itensAtual=[];
+  renderSolStatus(); renderTabela();
+}
+
+async function carregarItens(){
+  itensAtual=await req(`/rest/v1/compras_itens?solicitacao_id=eq.${solAtual.id}&order=criado_em.asc`);
+  renderSolStatus(); renderTabela();
+}
+
+async function novaSolicitacao(){
+  if(!confirm('Criar uma nova solicitação? A solicitação atual ficará no histórico.')) return;
+  await criarNovaSolicitacao();
+  document.getElementById('form-blocked').classList.remove('show');
+}
+
+// ── FORM ──
+function atualizarPreview(){
+  const qtd=Number(document.getElementById('f-qtd').value||0);
+  const preco=Number(document.getElementById('f-preco').value||0);
+  const preview=document.getElementById('total-preview');
+  if(preco>0&&qtd>0){
+    preview.style.display='flex';
+    document.getElementById('total-preview-val').textContent='R$ '+(preco*qtd).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  } else { preview.style.display='none'; }
+}
+document.getElementById('f-qtd').addEventListener('input',atualizarPreview);
+
+function limparForm(){
+  ['f-produto','f-fornecedor','f-estoque','f-qtd','f-preco'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-categoria').value='';
+  document.getElementById('total-preview').style.display='none';
+  document.getElementById('f-produto').focus();
+}
+
+async function adicionarItem(){
+  if(solAtual?.status!=='rascunho') return;
+  const produto=document.getElementById('f-produto').value.trim();
+  const categoria=document.getElementById('f-categoria').value;
+  const fornecedor=document.getElementById('f-fornecedor').value.trim();
+  const estoque=document.getElementById('f-estoque').value;
+  const qtd=document.getElementById('f-qtd').value;
+  const preco=document.getElementById('f-preco').value;
+  if(!produto||!categoria||!qtd){ toast('Preencha produto, categoria e quantidade.','err'); return; }
+  try {
+    const novo=await req('/rest/v1/compras_itens','POST',{
+      solicitacao_id:solAtual.id, produto, categoria,
+      fornecedor:fornecedor||null,
+      estoque_atual:estoque?Number(estoque):null,
+      qtd_solicitada:Number(qtd),
+      preco_vendedor:preco?Number(preco):null,
+      status_item:'pendente', criado_em:new Date().toISOString()
+    });
+    itensAtual.push(novo[0]);
+    limparForm(); renderTabela(); renderSolStatus();
+    toast('Produto adicionado!','ok');
+  } catch(e){ toast('Erro ao salvar.','err'); console.error(e); }
+}
+
+async function deletarItem(id){
+  if(!confirm('Remover este produto?')) return;
+  try {
+    await req(`/rest/v1/compras_itens?id=eq.${id}`,'DELETE');
+    itensAtual=itensAtual.filter(i=>i.id!==id);
+    renderTabela(); renderSolStatus();
+  } catch(e){ toast('Erro ao remover.','err'); }
+}
+
+// ── RENDER ──
+function renderTabela(){
+  const empty=document.getElementById('empty-state');
+  const table=document.getElementById('items-table');
+  const tbody=document.getElementById('tbody-items');
+  const bloqueado=solAtual?.status!=='rascunho';
+
+  // Bloquear form se não for rascunho
+  document.getElementById('form-blocked').classList.toggle('show', bloqueado);
+
+  if(itensAtual.length===0){ empty.style.display='flex'; table.style.display='none'; return; }
+  empty.style.display='none'; table.style.display='table';
+
+  tbody.innerHTML=itensAtual.map(item=>{
+    const totalItem=item.preco_vendedor?(item.preco_vendedor*item.qtd_solicitada).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+    const sbCls=`sbadge sbadge-${item.status_item||'pendente'}`;
+    const sbTxt={pendente:'Pendente',aprovado:'Aprovado',negado:'Negado',ajustado:'Ajustado'}[item.status_item]||'Pendente';
+    const rowCls=['aprovado','negado','ajustado'].includes(item.status_item)?item.status_item:'';
+    const qtdAprov=item.qtd_aprovada!==null&&item.qtd_aprovada!==undefined?item.qtd_aprovada:'—';
+    return `<tr class="${rowCls}">
+      <td><div class="item-nome-cell">${item.produto}</div><div style="font-family:var(--mono);font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:0.04em;margin-top:3px">${item.categoria}</div></td>
+      <td class="muted-cell">${item.fornecedor||'—'}</td>
+      <td class="mono-cell">${item.estoque_atual??'—'}</td>
+      <td class="mono-cell">${item.qtd_solicitada}</td>
+      <td class="price-cell">${item.preco_vendedor?'R$ '+Number(item.preco_vendedor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+      <td class="mono-cell">R$ ${totalItem}</td>
+      <td><span class="${sbCls}">${sbTxt}</span></td>
+      <td class="mono-cell" style="text-align:center">${qtdAprov}</td>
+      <td>${!bloqueado?`<button class="del-btn" onclick="deletarItem(${item.id})" title="Remover">×</button>`:'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSolStatus(){
+  if(!solAtual) return;
+  const d=new Date(solAtual.criado_em);
+  const dataStr=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('topbar-sol-id').textContent=`#${solAtual.id}`;
+  document.getElementById('sol-id-bar').textContent=`#${solAtual.id} · ${dataStr}`;
+
+  const pill=document.getElementById('sol-status-pill');
+  const statusLabels={rascunho:'Rascunho',enviada:'Enviada — Aguardando Aprovação',aprovada:'Aprovada'};
+  pill.textContent=statusLabels[solAtual.status]||solAtual.status;
+  pill.className=`sol-status-pill sol-status-${solAtual.status}`;
+
+  const msg=document.getElementById('status-bar-msg');
+  const msgs={rascunho:'Adicione produtos e envie para aprovação quando terminar',enviada:'Lista enviada. Aguardando retorno do Cadu.',aprovada:'Lista aprovada! Verifique as quantidades aprovadas.'};
+  msg.textContent=msgs[solAtual.status]||'';
+
+  // Stats
+  const total=itensAtual.reduce((s,i)=>s+(i.preco_vendedor||0)*(i.qtd_solicitada||0),0);
+  document.getElementById('stat-itens').textContent=itensAtual.length;
+  document.getElementById('stat-total').textContent='R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  document.getElementById('list-sub').textContent=`${itensAtual.length} produto(s) · ${dataStr}`;
+
+  // Botão enviar
+  const btnEnviar=document.getElementById('btn-enviar-top');
+  btnEnviar.style.display=(solAtual.status==='rascunho'&&itensAtual.length>0)?'flex':'none';
+}
+
+// ── ENVIAR ──
+function abrirModalEnviar(){
+  if(!solAtual||solAtual.status!=='rascunho'||itensAtual.length===0) return;
+  const total=itensAtual.reduce((s,i)=>s+(i.preco_vendedor||0)*(i.qtd_solicitada||0),0);
+  const semPreco=itensAtual.filter(i=>!i.preco_vendedor).length;
+  document.getElementById('modal-summary').innerHTML=`
+    <div class="modal-summary-row"><span>Produtos na lista</span><span>${itensAtual.length}</span></div>
+    <div class="modal-summary-row"><span>Loja</span><span>${lojaAtual}</span></div>
+    ${semPreco>0?`<div class="modal-summary-row"><span style="color:var(--yellow)">Sem preço informado</span><span>${semPreco} item(s)</span></div>`:''}
+    <div class="modal-summary-row"><span>Total estimado</span><span>R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+  `;
+  document.getElementById('modal-enviar').classList.add('open');
+}
+
+async function enviarSolicitacao(){
+  try {
+    await req(`/rest/v1/compras_solicitacoes?id=eq.${solAtual.id}`,'PATCH',{status:'enviada',enviado_em:new Date().toISOString()});
+    solAtual.status='enviada';
+    fecharModal('modal-enviar');
+    renderSolStatus(); renderTabela();
+    toast('✓ Enviado para aprovação!','ok');
+  } catch(e){ toast('Erro ao enviar.','err'); }
+}
+
+// ── HISTÓRICO ──
+async function showHistorico(){
+  try {
+    const hist=await req(`/rest/v1/compras_solicitacoes?loja=eq.${encodeURIComponent(lojaAtual)}&order=criado_em.desc&limit=20`);
+    if(hist.length===0){
+      document.getElementById('hist-body').innerHTML='<p style="color:var(--muted);padding:16px 0;text-align:center">Nenhuma solicitação anterior.</p>';
+      document.getElementById('modal-hist').classList.add('open');
+      return;
+    }
+    // Carregar todos os itens de uma vez
+    const ids=hist.map(s=>s.id).join(',');
+    const todosItens=await req(`/rest/v1/compras_itens?solicitacao_id=in.(${ids})&order=criado_em.asc`);
+    const itensPorSol={};
+    for(const i of todosItens){
+      if(!itensPorSol[i.solicitacao_id]) itensPorSol[i.solicitacao_id]=[];
+      itensPorSol[i.solicitacao_id].push(i);
+    }
+
+    const labels={rascunho:'Rascunho',enviada:'Enviada',aprovada:'Aprovada',encerrada:'Encerrada'};
+    const badgeCls={rascunho:'sbadge-pendente',enviada:'sbadge-ajustado',aprovada:'sbadge-aprovado',encerrada:'sbadge-pendente'};
+    const sbItemTxt={pendente:'Pendente',aprovado:'Aprovado',negado:'Negado',ajustado:'Ajustado'};
+    const sbItemCls={pendente:'sbadge-pendente',aprovado:'sbadge-aprovado',negado:'sbadge-negado',ajustado:'sbadge-ajustado'};
+
+    document.getElementById('hist-body').innerHTML=hist.map((s,idx)=>{
+      const itens=itensPorSol[s.id]||[];
+      const total=itens.reduce((sum,i)=>sum+(i.preco_vendedor||0)*(i.qtd_solicitada||0),0);
+      const d=new Date(s.criado_em);
+      const dataStr=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+      const rowsHtml=itens.length===0
+        ?`<tr><td colspan="7" class="hist-empty">Nenhum produto registrado.</td></tr>`
+        :itens.map(item=>{
+          const totalItem=item.preco_vendedor?(item.preco_vendedor*(item.qtd_aprovada||item.qtd_solicitada)).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+          const rowCls=['aprovado','negado','ajustado'].includes(item.status_item)?item.status_item:'';
+          const qtdAprov=item.qtd_aprovada!=null?item.qtd_aprovada:'—';
+          return `<tr class="${rowCls}">
+            <td>
+              <div class="hist-prod-nome">${item.produto}</div>
+              <div class="hist-cat-sub">${item.categoria}</div>
+            </td>
+            <td style="color:var(--muted);font-size:12px">${item.fornecedor||'—'}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${item.estoque_atual??'—'}</td>
+            <td style="font-family:var(--mono);font-size:12px">${item.qtd_solicitada}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--orange)">${item.preco_vendedor?'R$ '+Number(item.preco_vendedor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+            <td style="font-family:var(--mono);font-size:12px">${item.status_item==='negado'?'—':'R$ '+totalItem}</td>
+            <td>
+              <span class="sbadge ${sbItemCls[item.status_item]||'sbadge-pendente'}">${sbItemTxt[item.status_item]||'Pendente'}</span>
+              ${item.qtd_aprovada!=null&&item.status_item!=='negado'?`<span style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:6px">→ ${item.qtd_aprovada} un</span>`:''}
+            </td>
+          </tr>`;
+        }).join('');
+
+      return `<div class="hist-card" id="hcard-${s.id}">
+        <div class="hist-card-header" onclick="toggleHistCard(${s.id})">
+          <div class="hist-card-id">#${s.id}</div>
+          <div class="hist-card-info">
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px">
+              ${dataStr}
+              <span class="sbadge ${badgeCls[s.status]||'sbadge-pendente'}">${labels[s.status]||s.status}</span>
+            </div>
+            <div class="hist-card-data">${itens.length} produto(s)</div>
+          </div>
+          <div class="hist-card-stats">
+            <strong>R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+            total estimado
+          </div>
+          <div class="hist-card-chevron">▼</div>
+        </div>
+        <div class="hist-card-body">
+          <table class="hist-itens-table">
+            <thead><tr>
+              <th>Produto / Categoria</th>
+              <th>Fornecedor</th>
+              <th>Estoque</th>
+              <th>Qtd Pedida</th>
+              <th>Preço Unit.</th>
+              <th>Total</th>
+              <th>Status / Qtd Aprov.</th>
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('modal-hist').classList.add('open');
+  } catch(e){ toast('Erro ao carregar histórico.','err'); console.error(e); }
+}
+
+function toggleHistCard(id){
+  const card=document.getElementById(`hcard-${id}`);
+  if(card) card.classList.toggle('open');
+}
+
+function fecharModal(id='modal-enviar'){ document.getElementById(id).classList.remove('open'); }
+
+// Fechar modal clicando fora
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+// Enter para adicionar
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey&&document.activeElement.closest('.form-body')){
+    adicionarItem();
+  }
+});
+
+function toast(msg,tipo=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+tipo;
+  setTimeout(()=>el.className='toast',2600);
+}
+</script>
+</body>
+</html>
