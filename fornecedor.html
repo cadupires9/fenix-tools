@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fênix — Cotação de Fornecedor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1410;
+    --surface: #161c17;
+    --surface2: #1c241d;
+    --surface3: #222b23;
+    --border: #2a352b;
+    --text: #e8f0e9;
+    --text2: #7a9a7c;
+    --accent: #4caf76;
+    --accent-dim: #0e2016;
+    --accent-bright: #5dc885;
+    --red: #e05a4a;
+    --red-dim: #1e1010;
+    --yellow: #d4b84a;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  html, body { min-height: 100%; font-family: 'Figtree', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a352b; border-radius: 2px; }
+
+  /* ─── TOAST ─── */
+  #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface3); color: var(--text); padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 500; max-width: 300px; box-shadow: var(--shadow);
+    animation: slideIn 0.25s ease; border: 1px solid var(--border);
+  }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.info { border-color: var(--yellow); color: var(--yellow); }
+  .toast.removing { animation: slideOut 0.25s ease forwards; }
+  @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+
+  /* ─── FULL PAGE SCREENS ─── */
+  .full-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  /* Loading */
+  .loading-box { text-align: center; }
+  .spinner-lg {
+    width: 52px; height: 52px; border: 4px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 15px; }
+
+  /* Error */
+  .error-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 48px 40px; max-width: 440px; text-align: center;
+    border-top: 3px solid var(--red);
+  }
+  .error-icon { font-size: 48px; margin-bottom: 16px; }
+  .error-title { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 1px; color: var(--red); margin-bottom: 10px; }
+  .error-desc { color: var(--text2); font-size: 14px; line-height: 1.6; }
+
+  /* Identity */
+  .identity-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 48px 40px; max-width: 440px; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .identity-logo { font-family: 'Bebas Neue', cursive; font-size: 44px; color: var(--accent); letter-spacing: 2px; margin-bottom: 6px; }
+  .identity-sub { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 32px; }
+  .identity-card {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 28px; text-align: left;
+  }
+  .identity-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .identity-name { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .identity-loja { font-size: 14px; font-weight: 600; }
+
+  /* Success */
+  .success-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 60px 40px; max-width: 440px; text-align: center;
+    border-top: 3px solid var(--accent); box-shadow: var(--shadow);
+  }
+  .success-check { font-size: 64px; margin-bottom: 20px; }
+  .success-title { font-family: 'Bebas Neue', cursive; font-size: 32px; color: var(--accent); letter-spacing: 1px; margin-bottom: 10px; }
+  .success-desc { color: var(--text2); font-size: 14px; line-height: 1.6; }
+
+  /* ─── MAIN FORM ─── */
+  #main-form { display: none; flex-direction: column; min-height: 100vh; }
+
+  .form-header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .form-logo { font-family: 'Bebas Neue', cursive; font-size: 28px; color: var(--accent); letter-spacing: 2px; }
+  .form-header-sep { width: 1px; height: 24px; background: var(--border); }
+  .form-header-supplier { font-weight: 700; font-size: 16px; }
+  .form-header-spacer { flex: 1; }
+  .form-header-loja { font-size: 13px; font-weight: 700; }
+
+  .form-instructions {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+  }
+  .form-instructions-text { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 700px; }
+
+  .form-body { flex: 1; padding: 24px; max-width: 760px; margin: 0 auto; width: 100%; }
+  .form-body-title { font-family: 'Bebas Neue', cursive; font-size: 22px; letter-spacing: 1px; margin-bottom: 20px; color: var(--text2); }
+
+  /* Item Card */
+  .item-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 16px; overflow: hidden; transition: border-color 0.2s;
+  }
+  .item-card.filled { border-color: var(--accent); }
+  .item-card.unavailable { border-color: #444; opacity: 0.7; }
+  .item-card-header {
+    padding: 16px 20px; background: var(--surface2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .item-card-main { flex: 1; }
+  .item-card-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .item-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cat-chip {
+    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; background: var(--accent-dim); color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .meta-item { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+  .meta-label { font-weight: 600; }
+  .item-card-obs { margin-top: 8px; font-size: 12px; color: var(--text2); font-style: italic; background: var(--surface3); padding: 7px 10px; border-radius: 6px; }
+
+  .item-card-body { padding: 16px 20px; }
+  .item-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { margin-bottom: 0; }
+  .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .form-control {
+    width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); font-family: 'Figtree', sans-serif; font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  .form-control[type="number"] { font-family: 'JetBrains Mono', monospace; }
+  .form-control:disabled { opacity: 0.4; cursor: not-allowed; }
+  textarea.form-control { resize: vertical; min-height: 68px; }
+
+  /* Unavailable button */
+  .btn-unavail {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+    border-radius: 8px; border: 1.5px solid var(--border); background: transparent;
+    color: var(--text2); font-family: 'Figtree', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+  }
+  .btn-unavail:hover { border-color: var(--red); color: var(--red); }
+  .btn-unavail.active { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+
+  /* Filled indicator */
+  .filled-indicator {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+    color: var(--accent); font-weight: 600; padding: 4px 10px;
+    background: var(--accent-dim); border-radius: 8px;
+  }
+
+  /* ─── FOOTER ─── */
+  .form-footer {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 16px 24px; position: sticky; bottom: 0; z-index: 100;
+  }
+  .footer-inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 20px; }
+  .progress-area { flex: 1; }
+  .progress-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 600; }
+  .progress-bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+
+  .btn-submit {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--accent); color: #000; border: none; border-radius: 10px;
+    padding: 12px 28px; font-family: 'Figtree', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-submit:hover:not(:disabled) { background: var(--accent-bright); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-generic {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 10px; padding: 12px 28px;
+    font-family: 'Figtree', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .btn-primary-green { background: var(--accent); color: #000; }
+  .btn-primary-green:hover { background: var(--accent-bright); }
+
+  .spinner-inline {
+    width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
+  }
+
+  /* Util */
+  .w-full { width: 100%; }
+  @media (max-width: 600px) {
+    .item-form-grid { grid-template-columns: 1fr; }
+    .form-header { padding: 12px 16px; }
+    .form-body { padding: 16px; }
+    .footer-inner { flex-direction: column; align-items: stretch; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- LOADING -->
+<div id="screen-loading" class="full-screen">
+  <div class="loading-box">
+    <div class="spinner-lg"></div>
+    <div class="loading-text">Verificando acesso...</div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div id="screen-error" class="full-screen" style="display:none;">
+  <div class="error-box">
+    <div class="error-icon">🚫</div>
+    <div class="error-title">Acesso Inválido</div>
+    <div class="error-desc" id="error-desc">O link que você acessou é inválido, já foi utilizado, ou esta cotação não está mais disponível.</div>
+  </div>
+</div>
+
+<!-- IDENTITY -->
+<div id="screen-identity" class="full-screen" style="display:none;">
+  <div class="identity-box">
+    <div class="identity-logo">FÊNIX</div>
+    <div class="identity-sub">Confirmar Identidade</div>
+    <div class="identity-card">
+      <div class="identity-label">Você é o fornecedor</div>
+      <div class="identity-name" id="identity-name">—</div>
+      <div class="identity-label" style="margin-top:10px;">Para a loja</div>
+      <div class="identity-loja" id="identity-loja">—</div>
+    </div>
+    <button class="btn-generic btn-primary-green w-full" onclick="confirmIdentity()">
+      Sou eu, continuar →
+    </button>
+  </div>
+</div>
+
+<!-- MAIN FORM -->
+<div id="main-form">
+  <div class="form-header">
+    <div class="form-logo">FÊNIX</div>
+    <div class="form-header-sep"></div>
+    <div class="form-header-supplier" id="fh-supplier">—</div>
+    <div class="form-header-spacer"></div>
+    <div class="form-header-loja" id="fh-loja">—</div>
+  </div>
+  <div class="form-instructions">
+    <div class="form-instructions-text">
+      Preencha os campos abaixo com os preços e quantidades disponíveis para cada produto. Se não tiver algum item, clique em "Não tenho este item". Todos os itens devem ser preenchidos ou marcados antes de enviar.
+    </div>
+  </div>
+  <div class="form-body">
+    <div class="form-body-title">PRODUTOS SOLICITADOS</div>
+    <div id="items-container"></div>
+  </div>
+  <div class="form-footer">
+    <div class="footer-inner">
+      <div class="progress-area">
+        <div class="progress-label" id="progress-label">0 de 0 itens preenchidos</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+      <button class="btn-submit" id="btn-submit" onclick="submitQuotation()" disabled>
+        Enviar Cotação
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="screen-success" class="full-screen" style="display:none;">
+  <div class="success-box">
+    <div class="success-check">✅</div>
+    <div class="success-title">Cotação Enviada!</div>
+    <div class="success-desc">
+      Sua cotação foi registrada com sucesso para<br>
+      <strong id="success-loja" style="color: var(--accent);"></strong><br><br>
+      Obrigado pela participação. Entraremos em contato em breve.
+    </div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient('https://ccdlreblkvgnidtwinkz.supabase.co', 'sb_publishable_fUFSIIZ0L8BXehhezAFQ6A_fsQ0b9pv');
+
+const LOJAS = {
+  super_fenix: { nome: 'Super Fênix', cor: '#e07b2a' },
+  fenix_219:   { nome: 'Fênix 219',   cor: '#c8960a' },
+  nova_fenix:  { nome: 'Nova Fênix',  cor: '#4a9e6e' },
+  acacia:      { nome: 'Acácia',      cor: '#4a7ec4' }
+};
+
+// State
+let state = {
+  token: null,
+  cotacao: null,
+  lista: null,
+  itens: [],
+  unavailable: new Set()  // item IDs marked as unavailable
+};
+
+// ─── TOAST ───
+function toast(msg, type = 'info', dur = 3500) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 260); }, dur);
+}
+
+// ─── SCREENS ───
+function showScreen(id) {
+  ['screen-loading','screen-error','screen-identity','main-form','screen-success'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) {
+      if (s === 'main-form') el.style.display = s === id ? 'flex' : 'none';
+      else el.style.display = s === id ? 'flex' : 'none';
+    }
+  });
+}
+
+// ─── INIT ───
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  state.token = params.get('token');
+
+  if (!state.token) {
+    document.getElementById('error-desc').textContent = 'Nenhum token foi fornecido na URL. Acesse o link completo enviado a você.';
+    showScreen('screen-error');
+    return;
+  }
+
+  try {
+    // Fetch cotacao by token
+    const { data: cotacaoData, error: cotErr } = await db
+      .from('cotacoes')
+      .select('*')
+      .eq('token', state.token)
+      .single();
+
+    if (cotErr || !cotacaoData) {
+      document.getElementById('error-desc').textContent = 'Token de acesso inválido ou não encontrado. Verifique o link enviado a você.';
+      showScreen('screen-error');
+      return;
+    }
+
+    if (cotacaoData.status === 'respondida') {
+      document.getElementById('error-desc').textContent = 'Esta cotação já foi respondida anteriormente. Não é possível submeter novamente.';
+      showScreen('screen-error');
+      return;
+    }
+
+    state.cotacao = cotacaoData;
+
+    // Fetch lista
+    const { data: listaData, error: listaErr } = await db
+      .from('listas')
+      .select('*')
+      .eq('id', cotacaoData.lista_id)
+      .single();
+
+    if (listaErr || !listaData) {
+      document.getElementById('error-desc').textContent = 'Não foi possível encontrar a lista de compras associada a esta cotação.';
+      showScreen('screen-error');
+      return;
+    }
+
+    if (!['aprovada', 'enviada'].includes(listaData.status)) {
+      document.getElementById('error-desc').textContent = `Esta lista não está mais disponível para cotação (status: ${listaData.status}).`;
+      showScreen('screen-error');
+      return;
+    }
+
+    state.lista = listaData;
+
+    // Show identity screen
+    const loja = LOJAS[listaData.loja] || { nome: listaData.loja, cor: '#888' };
+    document.getElementById('identity-name').textContent = cotacaoData.fornecedor_nome;
+    const lojaEl = document.getElementById('identity-loja');
+    lojaEl.textContent = loja.nome;
+    lojaEl.style.color = loja.cor;
+    showScreen('screen-identity');
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('error-desc').textContent = 'Erro ao verificar acesso: ' + err.message;
+    showScreen('screen-error');
+  }
+}
+
+// ─── CONFIRM IDENTITY ───
+async function confirmIdentity() {
+  try {
+    await loadProducts();
+    setupFormHeader();
+    showScreen('main-form');
+  } catch (err) {
+    toast('Erro ao carregar produtos: ' + err.message, 'error');
+  }
+}
+
+function setupFormHeader() {
+  const loja = LOJAS[state.lista.loja] || { nome: state.lista.loja, cor: '#888' };
+  document.getElementById('fh-supplier').textContent = state.cotacao.fornecedor_nome;
+  const lojaEl = document.getElementById('fh-loja');
+  lojaEl.textContent = loja.nome;
+  lojaEl.style.color = loja.cor;
+}
+
+// ─── LOAD PRODUCTS ───
+async function loadProducts() {
+  const { data, error } = await db
+    .from('itens')
+    .select('*')
+    .eq('lista_id', state.cotacao.lista_id)
+    .order('criado_em', { ascending: true });
+  if (error) throw error;
+  state.itens = data || [];
+  renderItems();
+  updateProgress();
+}
+
+// ─── RENDER ITEMS ───
+function renderItems() {
+  const container = document.getElementById('items-container');
+  if (state.itens.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color: var(--text2); padding: 40px;">Nenhum produto encontrado nesta lista.</div>';
+    return;
+  }
+  container.innerHTML = state.itens.map((item, idx) => renderItemCard(item, idx)).join('');
+}
+
+function renderItemCard(item, idx) {
+  const loja = LOJAS[state.lista.loja] || { nome: state.lista.loja, cor: '#888' };
+  const obsHtml = item.observacao
+    ? `<div class="item-card-obs">💬 ${escHtml(item.observacao)}</div>`
+    : '';
+  const estoqueHtml = item.estoque_atual != null
+    ? `<span class="meta-item"><span class="meta-label">Estoque:</span> ${fmt(item.estoque_atual)} un</span>`
+    : '';
+
+  return `
+    <div class="item-card" id="card-${item.id}">
+      <div class="item-card-header">
+        <div class="item-card-main">
+          <div class="item-card-name">${escHtml(item.produto)}</div>
+          <div class="item-card-meta">
+            <span class="cat-chip">${escHtml(item.categoria)}</span>
+            <span class="meta-item"><span class="meta-label">Qtd solicitada:</span> ${fmt(item.qtd_desejada)} un</span>
+            ${estoqueHtml}
+          </div>
+          ${obsHtml}
+        </div>
+        <button class="btn-unavail" id="btn-unavail-${item.id}" onclick="toggleUnavailable('${item.id}')">
+          Não tenho este item
+        </button>
+      </div>
+      <div class="item-card-body" id="body-${item.id}">
+        <div class="item-form-grid">
+          <div class="form-group">
+            <label class="form-label">Preço Unitário (R$) *</label>
+            <input
+              type="number"
+              id="preco-${item.id}"
+              class="form-control"
+              placeholder="0,00"
+              min="0"
+              step="0.01"
+              oninput="onFieldChange('${item.id}')"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Qtd Disponível</label>
+            <input
+              type="number"
+              id="qtd-${item.id}"
+              class="form-control"
+              placeholder="${fmt(item.qtd_desejada)}"
+              min="0"
+              step="0.001"
+              oninput="onFieldChange('${item.id}')"
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observação</label>
+          <textarea
+            id="obs-${item.id}"
+            class="form-control"
+            placeholder="Informações adicionais sobre este produto..."
+            rows="2"
+            oninput="onFieldChange('${item.id}')"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── FIELD CHANGE ───
+function onFieldChange(itemId) {
+  updateCardState(itemId);
+  updateProgress();
+}
+
+function updateCardState(itemId) {
+  const card = document.getElementById('card-' + itemId);
+  if (!card) return;
+  const isUnavail = state.unavailable.has(itemId);
+  if (isUnavail) {
+    card.classList.remove('filled');
+    card.classList.add('unavailable');
+    return;
+  }
+  const preco = parseFloat(document.getElementById('preco-' + itemId)?.value || 0);
+  const isFilled = preco > 0;
+  card.classList.toggle('filled', isFilled);
+  card.classList.remove('unavailable');
+}
+
+// ─── TOGGLE UNAVAILABLE ───
+function toggleUnavailable(itemId) {
+  const btn = document.getElementById('btn-unavail-' + itemId);
+  const body = document.getElementById('body-' + itemId);
+  const card = document.getElementById('card-' + itemId);
+
+  if (state.unavailable.has(itemId)) {
+    // Re-enable
+    state.unavailable.delete(itemId);
+    btn.classList.remove('active');
+    btn.textContent = 'Não tenho este item';
+    body.style.display = '';
+    // Re-enable inputs
+    ['preco-','qtd-','obs-'].forEach(prefix => {
+      const el = document.getElementById(prefix + itemId);
+      if (el) el.disabled = false;
+    });
+    card.classList.remove('unavailable');
+  } else {
+    // Mark as unavailable
+    state.unavailable.add(itemId);
+    btn.classList.add('active');
+    btn.textContent = '✕ Marcado como indisponível';
+    // Disable and clear inputs
+    ['preco-','qtd-','obs-'].forEach(prefix => {
+      const el = document.getElementById(prefix + itemId);
+      if (el) { el.disabled = true; el.value = ''; }
+    });
+    card.classList.remove('filled');
+    card.classList.add('unavailable');
+  }
+  updateProgress();
+}
+
+// ─── PROGRESS ───
+function updateProgress() {
+  const total = state.itens.length;
+  let filled = 0;
+  for (const item of state.itens) {
+    if (state.unavailable.has(item.id)) {
+      filled++;
+      continue;
+    }
+    const preco = parseFloat(document.getElementById('preco-' + item.id)?.value || 0);
+    if (preco > 0) filled++;
+  }
+  const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+  document.getElementById('progress-label').textContent = `${filled} de ${total} itens preenchidos`;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('btn-submit').disabled = filled < total;
+}
+
+// ─── VALIDATE FORM ───
+function validateForm() {
+  for (const item of state.itens) {
+    if (state.unavailable.has(item.id)) continue;
+    const preco = parseFloat(document.getElementById('preco-' + item.id)?.value || 0);
+    if (preco <= 0) return false;
+  }
+  return true;
+}
+
+// ─── SUBMIT ───
+async function submitQuotation() {
+  if (!validateForm()) {
+    toast('Preencha todos os preços ou marque os itens indisponíveis', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span> Enviando...';
+
+  try {
+    // Build respostas
+    const respostasData = state.itens.map(item => {
+      const isUnavail = state.unavailable.has(item.id);
+      if (isUnavail) {
+        return {
+          cotacao_id: state.cotacao.id,
+          item_id: item.id,
+          preco_ofertado: 0,
+          qtd_disponivel: 0,
+          observacao: 'Produto não disponível',
+          status_aprovacao: 'pendente'
+        };
+      }
+      const preco = parseFloat(document.getElementById('preco-' + item.id)?.value || 0);
+      const qtd = parseFloat(document.getElementById('qtd-' + item.id)?.value || 0) || item.qtd_desejada;
+      const obs = document.getElementById('obs-' + item.id)?.value.trim() || null;
+      return {
+        cotacao_id: state.cotacao.id,
+        item_id: item.id,
+        preco_ofertado: preco,
+        qtd_disponivel: qtd,
+        observacao: obs,
+        status_aprovacao: 'pendente'
+      };
+    });
+
+    // Upsert respostas
+    const { error: respErr } = await db
+      .from('respostas')
+      .upsert(respostasData, { onConflict: 'cotacao_id,item_id' });
+    if (respErr) throw respErr;
+
+    // Update cotacao status
+    const { error: cotErr } = await db
+      .from('cotacoes')
+      .update({ status: 'respondida', respondido_em: new Date().toISOString() })
+      .eq('id', state.cotacao.id);
+    if (cotErr) throw cotErr;
+
+    // Show success
+    const loja = LOJAS[state.lista.loja] || { nome: state.lista.loja, cor: '#888' };
+    const successLojaEl = document.getElementById('success-loja');
+    successLojaEl.textContent = loja.nome;
+    successLojaEl.style.color = loja.cor;
+    showScreen('screen-success');
+
+  } catch (err) {
+    console.error(err);
+    toast('Erro ao enviar cotação: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Enviar Cotação';
+  }
+}
+
+// ─── UTILS ───
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(n) {
+  if (n == null) return '—';
+  const num = parseFloat(n);
+  return num % 1 === 0 ? num.toLocaleString('pt-BR') : num.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+}
+
+// ─── START ───
+init();
+</script>
+</body>
+</html>
