@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Compras · Cadu</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#111210; --surface:#161816; --surface2:#1e201e; --surface3:#252725;
+  --border:#2e302e; --border2:#3a3c3a;
+  --text:#e8e6e0; --muted:#606060; --muted2:#404040;
+  --orange:#e07b2a; --orange-dim:rgba(224,123,42,.10);
+  --green:#4a9e6e; --green-dim:rgba(74,158,110,.12);
+  --red:#c44030; --red-dim:rgba(196,64,48,.10);
+  --yellow:#c8960a; --yellow-dim:rgba(200,150,10,.12);
+  --blue:#4a7ec4;
+  --font:'Figtree',sans-serif; --display:'Bebas Neue',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:18px;flex-shrink:0;}
+.topbar-logo{font-family:var(--display);font-size:21px;letter-spacing:.04em;}
+.topbar-logo em{color:var(--orange);font-style:normal;}
+.tdiv{width:1px;height:22px;background:var(--border);}
+.tstat{display:flex;flex-direction:column;gap:1px;}
+.tstat-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.tstat-val{font-family:var(--mono);font-size:13px;}
+.tstat-val.orange{color:var(--orange);}
+.tstat-val.green{color:var(--green);}
+.tstat-val.blue{color:var(--blue);}
+.tsp{flex:1;}
+.tbtn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:0 13px;height:30px;border-radius:5px;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:5px;}
+.tbtn:hover{border-color:var(--orange);color:var(--orange);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* WORKSPACE 3 colunas */
+.workspace{flex:1;display:grid;grid-template-columns:190px 1fr 340px;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto;display:flex;flex-direction:column;}
+.s-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);padding:0 15px;margin-bottom:6px;}
+.nav-btn{width:100%;background:none;border:none;color:var(--muted);padding:8px 15px;text-align:left;cursor:pointer;font-family:var(--font);font-size:13px;display:flex;align-items:center;gap:8px;transition:all .1s;border-left:2px solid transparent;}
+.nav-btn:hover{color:var(--text);background:var(--surface2);}
+.nav-btn.active{color:var(--text);background:var(--orange-dim);border-left-color:var(--nav-c,var(--orange));}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.nav-count{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--surface3);color:var(--orange);padding:1px 6px;border-radius:3px;min-width:20px;text-align:center;}
+.nav-count.z{color:var(--muted);}
+.sdiv{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+/* LISTA CENTRAL */
+.mid-panel{overflow-y:auto;border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;}
+.mid-header{padding:13px 16px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10;flex-shrink:0;}
+.mid-title{font-family:var(--display);font-size:18px;letter-spacing:.03em;line-height:1;}
+.mid-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.lista-item{padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
+.lista-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--item-c,transparent);opacity:0;transition:opacity .15s;}
+.lista-item:hover{background:var(--surface);}
+.lista-item:hover::before{opacity:.6;}
+.lista-item.sel{background:var(--surface2);}
+.lista-item.sel::before{opacity:1;}
+.li-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.li-loja{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px;}
+.li-id{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.li-meta{display:flex;justify-content:space-between;align-items:center;}
+.li-data{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.pill{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:3px;}
+.pill-rascunho{background:var(--surface3);color:var(--muted);}
+.pill-aguardando_aprovacao{background:rgba(200,150,10,.15);color:var(--yellow);}
+.pill-aprovada{background:var(--green-dim);color:var(--green);}
+.pill-enviada{background:rgba(74,126,196,.15);color:var(--blue);}
+.pill-cotacoes_recebidas{background:rgba(74,158,110,.2);color:var(--green);}
+.pill-encerrada{background:var(--surface3);color:var(--muted);}
+.pill-rejeitada{background:var(--red-dim);color:var(--red);}
+.li-progress{margin-top:8px;height:2px;background:var(--surface3);border-radius:1px;overflow:hidden;}
+.li-progress-bar{height:100%;border-radius:1px;transition:width .3s;}
+
+/* DETALHE */
+.detail{background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;}
+.detail-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:12px;padding:40px;text-align:center;font-size:12px;}
+
+.dh{padding:15px 17px 13px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.dh-loja{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.dh-loja-nome{font-family:var(--display);font-size:19px;letter-spacing:.03em;line-height:1;}
+.dh-id{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.dh-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ITENS DO DETALHE */
+.detail-items-list{flex:1;overflow-y:auto;}
+.det-item{padding:10px 16px;border-bottom:1px solid var(--border);}
+.det-item-nome{font-weight:600;font-size:13px;}
+.det-item-cat{font-family:var(--mono);font-size:9px;color:var(--orange);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+.det-item-meta{display:flex;gap:16px;margin-top:6px;}
+.det-item-field{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.det-item-field strong{display:block;color:var(--text);font-size:12px;margin-top:1px;}
+
+/* AÇÕES */
+.detail-actions{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.act-btn{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:8px 0;border-radius:5px;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:all .12s;}
+.act-btn.green{border-color:rgba(74,158,110,.4);color:var(--green);}
+.act-btn.green:hover{background:var(--green-dim);border-color:var(--green);}
+.act-btn.red{border-color:rgba(196,64,48,.3);color:var(--red);}
+.act-btn.red:hover{background:var(--red-dim);border-color:var(--red);}
+.act-btn.orange{background:var(--orange);border-color:var(--orange);color:#000;}
+.act-btn.orange:hover{opacity:.85;}
+.act-btn.wa{background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);color:#25d366;}
+.act-btn.wa:hover{background:rgba(37,211,102,.25);}
+.act-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* COMPARATIVO */
+.comp-toggle{width:100%;background:var(--surface2);border:none;border-bottom:1px solid var(--border);color:var(--muted);padding:9px 16px;text-align:left;cursor:pointer;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;justify-content:space-between;transition:color .12s;flex-shrink:0;}
+.comp-toggle:hover{color:var(--text);}
+.comp-toggle.open{color:var(--orange);}
+.comp-panel{display:none;flex-shrink:0;border-bottom:1px solid var(--border);overflow-x:auto;max-height:260px;overflow-y:auto;}
+.comp-panel.open{display:block;}
+.comp-table{width:100%;border-collapse:collapse;font-size:11px;}
+.comp-table th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:7px 10px;text-align:left;background:var(--surface3);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;}
+.comp-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+.comp-table tr:hover td{background:var(--surface2);}
+.price-best{color:var(--green);font-weight:700;font-family:var(--mono);font-size:11px;}
+.price-worst{color:var(--muted);font-family:var(--mono);font-size:11px;}
+.price-mid{color:var(--text);font-family:var(--mono);font-size:11px;}
+.price-none{color:var(--muted2);font-style:italic;font-size:11px;}
+
+/* ABAS FORNECEDOR */
+.forn-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;background:var(--surface2);}
+.forn-tab{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:9px 13px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .12s;background:none;border-top:none;border-left:none;border-right:none;display:flex;align-items:center;gap:5px;}
+.forn-tab:hover{color:var(--text);}
+.forn-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+.tab-dot{width:6px;height:6px;border-radius:50%;}
+.tab-badge{background:var(--orange);color:#000;border-radius:3px;padding:0 5px;font-size:9px;}
+
+/* ITENS COTAÇÃO */
+.cot-item{padding:11px 16px;border-bottom:1px solid var(--border);transition:background .1s;}
+.cot-item:hover{background:var(--surface2);}
+.cot-item.apr{border-left:2px solid var(--green);}
+.cot-item.neg{border-left:2px solid var(--red);opacity:.55;}
+.cot-item.ajust{border-left:2px solid var(--yellow);}
+.ci-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.ci-nome{font-weight:600;font-size:13px;}
+.ci-cat{font-family:var(--mono);font-size:9px;color:var(--orange);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+.sbadge{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.05em;padding:3px 7px;border-radius:3px;}
+.sb-p{background:var(--surface3);color:var(--muted);}
+.sb-a{background:var(--green-dim);color:var(--green);}
+.sb-n{background:var(--red-dim);color:var(--red);}
+.sb-j{background:var(--yellow-dim);color:var(--yellow);}
+.ci-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+.cn-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.cn-val{font-family:var(--mono);font-size:12px;}
+.cn-val.price{color:var(--orange);}
+.cn-val.price.best{color:var(--green);}
+.cn-val.muted{color:var(--muted);}
+.ci-actions{display:flex;gap:6px;align-items:center;}
+.qa-input{background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:5px 8px;border-radius:4px;font-family:var(--mono);font-size:12px;width:64px;text-align:center;outline:none;transition:border-color .12s;}
+.qa-input:focus{border-color:var(--orange);}
+.mbtn{background:none;border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:4px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.mbtn.apr{border-color:rgba(74,158,110,.35);color:var(--green);}
+.mbtn.apr:hover,.mbtn.apr.on{background:var(--green-dim);border-color:var(--green);}
+.mbtn.neg{border-color:rgba(196,64,48,.3);color:var(--red);}
+.mbtn.neg:hover,.mbtn.neg.on{background:var(--red-dim);border-color:var(--red);}
+
+/* LINKS */
+.link-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.link-forn{font-weight:700;font-size:13px;margin-bottom:5px;}
+.link-url{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin-bottom:8px;}
+.link-btns{display:flex;gap:8px;}
+.link-copy{background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .12s;}
+.link-copy:hover{border-color:var(--border2);color:var(--orange);}
+.link-wa{background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);color:#25d366;border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .12s;}
+.link-wa:hover{background:rgba(37,211,102,.25);}
+
+/* TOTAL */
+.detail-total{padding:11px 16px;border-top:1px solid var(--border);background:var(--surface2);flex-shrink:0;}
+.dt-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:3px;}
+.dt-row.main{font-size:14px;color:var(--orange);}
+
+/* ECONOMIA */
+.economia-badge{background:var(--green-dim);border:1px solid rgba(74,158,110,.3);border-radius:6px;padding:8px 12px;margin:10px 16px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+
+.list-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:12px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:560px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:mIn .2s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:var(--display);font-size:22px;letter-spacing:.03em;margin-bottom:6px;}
+.modal-title em{color:var(--orange);font-style:normal;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.mbtn-modal{flex:1;padding:11px;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .12s;}
+.mbtn-modal.confirm{background:var(--orange);color:#fff;}
+.mbtn-modal.confirm:hover{opacity:.88;}
+.mbtn-modal.green{background:var(--green);color:#fff;}
+.mbtn-modal.green:hover{opacity:.88;}
+.mbtn-modal.cancel{background:var(--surface3);border:1px solid var(--border2);color:var(--muted);}
+.mbtn-modal.cancel:hover{color:var(--text);}
+
+.forn-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.forn-row input{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .12s;}
+.forn-row input:focus{border-color:var(--orange);}
+.add-forn-btn{background:none;border:1.5px dashed var(--border2);border-radius:7px;padding:9px 14px;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;transition:all .12s;}
+.add-forn-btn:hover{border-color:var(--orange);color:var(--orange);}
+.rem-forn{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:16px;padding:4px;transition:color .12s;}
+.rem-forn:hover{color:var(--red);}
+
+.wa-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;line-height:1.6;color:var(--text);margin-bottom:16px;}
+
+.toast{position:fixed;bottom:20px;right:24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:6px;font-family:var(--mono);font-size:11px;z-index:999;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">COMPRAS <em>FÊNIX</em></div>
+  <div class="tdiv"></div>
+  <div class="tstat"><div class="tstat-label">Pendentes</div><div class="tstat-val orange" id="stat-pend">—</div></div>
+  <div class="tstat"><div class="tstat-label">Cotações Recebidas</div><div class="tstat-val green" id="stat-cot">—</div></div>
+  <div class="tstat"><div class="tstat-label">Encerradas hoje</div><div class="tstat-val blue" id="stat-enc">—</div></div>
+  <div class="tsp"></div>
+  <div style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="topbar-time"></div>
+  <button class="tbtn" onclick="carregarTudo()"><div class="pulse"></div> Atualizar</button>
+</div>
+
+<div class="workspace">
+  <nav class="sidebar">
+    <div style="margin-bottom:18px">
+      <div class="s-label">Lojas</div>
+      <button class="nav-btn active" style="--nav-c:var(--orange)" onclick="filtrarLoja(null,this)">
+        <div class="nav-dot" style="background:var(--muted)"></div>Todas<span class="nav-count" id="nc-todas">0</span>
+      </button>
+      <button class="nav-btn" style="--nav-c:#e07b2a" onclick="filtrarLoja('Super Fênix',this)">
+        <div class="nav-dot" style="background:#e07b2a"></div>Super Fênix<span class="nav-count" id="nc-sf">0</span>
+      </button>
+      <button class="nav-btn" style="--nav-c:#c8960a" onclick="filtrarLoja('Fênix 219',this)">
+        <div class="nav-dot" style="background:#c8960a"></div>Fênix 219<span class="nav-count" id="nc-219">0</span>
+      </button>
+      <button class="nav-btn" style="--nav-c:#4a9e6e" onclick="filtrarLoja('Nova Fênix',this)">
+        <div class="nav-dot" style="background:#4a9e6e"></div>Nova Fênix<span class="nav-count" id="nc-nf">0</span>
+      </button>
+      <button class="nav-btn" style="--nav-c:#4a7ec4" onclick="filtrarLoja('Acácia',this)">
+        <div class="nav-dot" style="background:#4a7ec4"></div>Acácia<span class="nav-count" id="nc-ac">0</span>
+      </button>
+    </div>
+    <hr class="sdiv">
+    <div>
+      <div class="s-label">Status</div>
+      <button class="nav-btn active" id="fs-pend" style="--nav-c:var(--yellow)" onclick="filtrarStatus('aguardando_aprovacao',this)">
+        <div class="nav-dot" style="background:var(--yellow)"></div>Aguardando
+      </button>
+      <button class="nav-btn" id="fs-env" style="--nav-c:var(--blue)" onclick="filtrarStatus('enviada',this)">
+        <div class="nav-dot" style="background:var(--blue)"></div>Enviadas
+      </button>
+      <button class="nav-btn" id="fs-cot" style="--nav-c:var(--green)" onclick="filtrarStatus('cotacoes_recebidas',this)">
+        <div class="nav-dot" style="background:var(--green)"></div>Cot. Recebidas
+      </button>
+      <button class="nav-btn" id="fs-enc" style="--nav-c:var(--muted)" onclick="filtrarStatus('encerrada',this)">
+        <div class="nav-dot" style="background:var(--muted)"></div>Encerradas
+      </button>
+      <button class="nav-btn" id="fs-all" style="--nav-c:var(--muted2)" onclick="filtrarStatus('todas',this)">
+        <div class="nav-dot" style="background:var(--muted2)"></div>Todas
+      </button>
+    </div>
+  </nav>
+
+  <div class="mid-panel">
+    <div class="mid-header">
+      <div>
+        <div class="mid-title" id="mid-title">AGUARDANDO</div>
+        <div class="mid-sub" id="mid-sub">Listas enviadas pelos gerentes</div>
+      </div>
+    </div>
+    <div id="mid-body"><div class="list-empty">Carregando...</div></div>
+  </div>
+
+  <div class="detail" id="detail">
+    <div class="detail-empty"><div style="font-size:32px;opacity:.4">←</div><div>Selecione uma lista</div></div>
+  </div>
+</div>
+
+<!-- MODAL FORNECEDORES -->
+<div class="modal-overlay" id="modal-forn">
+  <div class="modal">
+    <div class="modal-title">Gerar <em>Links</em></div>
+    <div class="modal-sub">Informe os fornecedores. Cada um receberá um link único de cotação.</div>
+    <div id="forn-list">
+      <div class="forn-row" id="forn-row-0">
+        <input type="text" placeholder="Nome do fornecedor" id="forn-nome-0">
+        <input type="text" placeholder="WhatsApp (opcional)" id="forn-contato-0" style="max-width:160px">
+      </div>
+    </div>
+    <button class="add-forn-btn" onclick="addFornRow()" style="margin-top:8px">+ Adicionar fornecedor</button>
+    <div class="modal-actions">
+      <button class="mbtn-modal cancel" onclick="fecharModal('modal-forn')">Cancelar</button>
+      <button class="mbtn-modal green" onclick="gerarLinks()">Gerar Links</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LINKS -->
+<div class="modal-overlay" id="modal-links">
+  <div class="modal" style="width:580px">
+    <div class="modal-title">Links <em>Gerados</em></div>
+    <div class="modal-sub">Copie ou envie por WhatsApp. O link expira após o fornecedor responder.</div>
+    <div id="links-body"></div>
+    <div class="modal-actions">
+      <button class="mbtn-modal cancel" style="flex:none;padding:11px 20px" onclick="fecharModal('modal-links')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL WA -->
+<div class="modal-overlay" id="modal-wa">
+  <div class="modal">
+    <div class="modal-title">WhatsApp <em>Pedido</em></div>
+    <div class="modal-sub" id="wa-sub"></div>
+    <div class="wa-preview" id="wa-preview"></div>
+    <div class="modal-actions">
+      <button class="mbtn-modal cancel" onclick="copiarWA()">📋 Copiar</button>
+      <button class="mbtn-modal confirm" style="background:#25d366" onclick="abrirWA()">📱 Abrir WhatsApp</button>
+      <button class="mbtn-modal cancel" style="flex:none;padding:11px 16px" onclick="fecharModal('modal-wa')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB='https://ccdlreblkvgnidtwinkz.supabase.co';
+const KEY='sb_publishable_fUFSIIZ0L8BXehhezAFQ6A_fsQ0b9pv';
+const BASE_URL=window.location.href.replace(/[^/]*$/,'')+'fornecedor.html';
+const LOJA_CORES={'Super Fênix':'#e07b2a','Fênix 219':'#c8960a','Nova Fênix':'#4a9e6e','Acácia':'#4a7ec4'};
+const STATUS_LABELS={rascunho:'Rascunho',aguardando_aprovacao:'Aguardando',enviada:'Enviada',cotacoes_recebidas:'Cot. Recebidas',encerrada:'Encerrada',rejeitada:'Rejeitada'};
+
+let listas=[],itensPorLista={},cotacoesPorLista={},respostasPorCot={};
+let filtroLoja=null,filtroStatus='aguardando_aprovacao',listaSel=null,fornTabSel={};
+let compAberto=false,fornRows=1;
+let waMsgAtual='',waContatoAtual='';
+let listaIdParaLinks=null;
+
+async function req(path,method='GET',body=null){
+  const opts={method,headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(SB+path,opts);
+  if(!r.ok) throw new Error(await r.text());
+  const t=await r.text(); return t?JSON.parse(t):[];
+}
+
+function gerarToken(){return Math.random().toString(36).substr(2,9)+Date.now().toString(36);}
+
+async function carregarTudo(){
+  try{
+    listas=await req('/rest/v1/listas?order=criado_em.desc&limit=80');
+    itensPorLista={};cotacoesPorLista={};respostasPorCot={};
+    if(listas.length>0){
+      const ids=listas.map(l=>l.id).join(',');
+      const itens=await req(`/rest/v1/itens?lista_id=in.(${ids})&order=criado_em.asc`);
+      for(const i of itens){if(!itensPorLista[i.lista_id])itensPorLista[i.lista_id]=[];itensPorLista[i.lista_id].push(i);}
+      const cots=await req(`/rest/v1/cotacoes?lista_id=in.(${ids})&order=criado_em.asc`);
+      for(const c of cots){if(!cotacoesPorLista[c.lista_id])cotacoesPorLista[c.lista_id]=[];cotacoesPorLista[c.lista_id].push(c);}
+      if(cots.length>0){
+        const cids=cots.map(c=>c.id).join(',');
+        const resps=await req(`/rest/v1/respostas?cotacao_id=in.(${cids})&order=criado_em.asc`);
+        for(const r of resps){if(!respostasPorCot[r.cotacao_id])respostasPorCot[r.cotacao_id]=[];respostasPorCot[r.cotacao_id].push(r);}
+      }
+    }
+    atualizarTopbar();atualizarContadores();renderLista();
+    if(listaSel){const a=listas.find(l=>l.id===listaSel.id);if(a){listaSel=a;renderDetalhe();}}
+  }catch(e){toast('Erro ao carregar','err');console.error(e);}
+}
+
+function atualizarTopbar(){
+  const hoje=new Date().toDateString();
+  document.getElementById('stat-pend').textContent=listas.filter(l=>l.status==='aguardando_aprovacao').length;
+  document.getElementById('stat-cot').textContent=listas.filter(l=>l.status==='cotacoes_recebidas').length;
+  document.getElementById('stat-enc').textContent=listas.filter(l=>l.status==='encerrada'&&l.encerrado_em&&new Date(l.encerrado_em).toDateString()===hoje).length;
+}
+
+function atualizarContadores(){
+  const c=loja=>listas.filter(l=>l.status==='aguardando_aprovacao'&&(!loja||l.loja===loja)).length;
+  const s=(id,v)=>{const el=document.getElementById(id);if(el){el.textContent=v;el.className='nav-count'+(v===0?' z':'');}};
+  s('nc-todas',c(null));s('nc-sf',c('Super Fênix'));s('nc-219',c('Fênix 219'));s('nc-nf',c('Nova Fênix'));s('nc-ac',c('Acácia'));
+}
+
+function filtrarLoja(loja,btn){
+  filtroLoja=loja;
+  document.querySelectorAll('.sidebar .nav-btn').forEach(b=>{if(!['fs-pend','fs-env','fs-cot','fs-enc','fs-all'].includes(b.id))b.classList.remove('active');});
+  if(btn)btn.classList.add('active');renderLista();
+}
+
+function filtrarStatus(st,btn){
+  filtroStatus=st;
+  ['fs-pend','fs-env','fs-cot','fs-enc','fs-all'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const t={aguardando_aprovacao:'AGUARDANDO',enviada:'ENVIADAS',cotacoes_recebidas:'COT. RECEBIDAS',encerrada:'ENCERRADAS',todas:'TODAS'};
+  const s={aguardando_aprovacao:'Listas para aprovar',enviada:'Aguardando fornecedores',cotacoes_recebidas:'Prontas para aprovação de preços',encerrada:'Finalizadas',todas:'Histórico'};
+  document.getElementById('mid-title').textContent=t[st]||st.toUpperCase();
+  document.getElementById('mid-sub').textContent=s[st]||'';
+  renderLista();
+}
+
+function renderLista(){
+  let lista=listas;
+  if(filtroLoja)lista=lista.filter(l=>l.loja===filtroLoja);
+  if(filtroStatus!=='todas')lista=lista.filter(l=>l.status===filtroStatus);
+  const el=document.getElementById('mid-body');
+  if(lista.length===0){el.innerHTML='<div class="list-empty">Nenhuma lista.</div>';return;}
+  el.innerHTML=lista.map(l=>{
+    const cor=LOJA_CORES[l.loja]||'#666';
+    const itens=itensPorLista[l.id]||[];
+    const cots=cotacoesPorLista[l.id]||[];
+    const resp=cots.filter(c=>c.status==='respondida').length;
+    const d=new Date(l.criado_em);
+    const ds=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const isSel=listaSel&&listaSel.id===l.id;
+    return `<div class="lista-item ${isSel?'sel':''}" style="--item-c:${cor}" onclick="selecionarLista(${l.id})">
+      <div class="li-top"><div class="li-loja"><div class="nav-dot" style="background:${cor}"></div>${l.loja}</div><div class="li-id">#${l.id}</div></div>
+      <div class="li-meta"><div class="li-data">${ds} · ${itens.length} item(s)${cots.length>0?` · ${resp}/${cots.length} resp`:''}</div><span class="pill pill-${l.status}">${STATUS_LABELS[l.status]||l.status}</span></div>
+      ${cots.length>0?`<div class="li-progress"><div class="li-progress-bar" style="width:${Math.round(resp/cots.length*100)}%;background:${cor}"></div></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function selecionarLista(id){listaSel=listas.find(l=>l.id===id)||null;compAberto=false;renderLista();renderDetalhe();}
+
+function calcMenores(listaId){
+  const cots=cotacoesPorLista[listaId]||[];
+  const menores={};
+  for(const cot of cots){
+    const resps=respostasPorCot[cot.id]||[];
+    for(const r of resps){
+      if(r.preco_ofertado&&r.qtd_disponivel>0){
+        if(!menores[r.item_id]||r.preco_ofertado<menores[r.item_id]) menores[r.item_id]=r.preco_ofertado;
+      }
+    }
+  }
+  return menores;
+}
+
+function renderDetalhe(){
+  const panel=document.getElementById('detail');
+  if(!listaSel){panel.innerHTML='<div class="detail-empty"><div style="font-size:32px;opacity:.4">←</div><div>Selecione uma lista</div></div>';return;}
+  const l=listaSel;
+  const cor=LOJA_CORES[l.loja]||'#666';
+  const d=new Date(l.criado_em);
+  const ds=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const itens=itensPorLista[l.id]||[];
+  const cots=cotacoesPorLista[l.id]||[];
+  const menores=calcMenores(l.id);
+  const encerrada=l.status==='encerrada';
+
+  if(!fornTabSel[l.id]&&cots.length>0) fornTabSel[l.id]=cots[0].id;
+
+  // Cabeçalho
+  let html=`<div class="dh">
+    <div class="dh-loja"><div class="nav-dot" style="background:${cor};width:10px;height:10px"></div><div class="dh-loja-nome">${l.loja}</div></div>
+    <div class="dh-id">#${l.id} · ${ds}</div>
+    <div class="dh-meta">${itens.length} item(s) · ${cots.length} fornecedor(es)</div>
+  </div>`;
+
+  // Ações principais
+  if(l.status==='aguardando_aprovacao'){
+    html+=`<div class="detail-actions">
+      <button class="act-btn green" onclick="aprovarLista(${l.id})">✓ Aprovar Lista</button>
+      <button class="act-btn red" onclick="rejeitarLista(${l.id})">✕ Rejeitar</button>
+    </div>`;
+    // Mostrar itens para revisão
+    html+=`<div class="detail-items-list">${itens.map(i=>`<div class="det-item">
+      <div class="det-item-nome">${i.produto}</div>
+      <div class="det-item-cat">${i.categoria}</div>
+      <div class="det-item-meta">
+        <div class="det-item-field">Qtd<strong>${i.qtd_desejada}</strong></div>
+        <div class="det-item-field">Estoque<strong>${i.estoque_atual??'—'}</strong></div>
+        ${i.observacao?`<div class="det-item-field">Obs<strong style="color:var(--muted)">${i.observacao}</strong></div>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+  } else if(l.status==='aprovada'){
+    html+=`<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--green);margin-bottom:12px">✓ Lista aprovada. Gere os links para os fornecedores.</div>
+      <button class="act-btn orange" onclick="abrirModalForn(${l.id})" style="width:100%">Gerar Links →</button>
+    </div>
+    <div class="detail-items-list">${itens.map(i=>`<div class="det-item">
+      <div class="det-item-nome">${i.produto}</div><div class="det-item-cat">${i.categoria}</div>
+    </div>`).join('')}</div>`;
+  } else if(['enviada','cotacoes_recebidas'].includes(l.status)||encerrada){
+    // Comparativo + abas
+    const respondidas=cots.filter(c=>c.status==='respondida');
+    if(respondidas.length>0){
+      html+=`<button class="comp-toggle ${compAberto?'open':''}" onclick="toggleComp(this)">
+        📊 Comparativo de preços (${respondidas.length}/${cots.length} respondidos) <span>${compAberto?'▲':'▼'}</span>
+      </button>
+      <div class="comp-panel ${compAberto?'open':''}">${buildComparativo(itens,cots,menores)}</div>`;
+    }
+    if(cots.length>0){
+      const cotAtiva=cots.find(c=>c.id===fornTabSel[l.id])||cots[0];
+      html+=`<div class="forn-tabs">${cots.map(c=>{
+        const resps=respostasPorCot[c.id]||[];
+        const pend=resps.filter(r=>r.status_aprovacao==='pendente'&&r.preco_ofertado).length;
+        const dotCor=c.status==='respondida'?'var(--green)':'var(--muted)';
+        return `<button class="forn-tab ${c.id===cotAtiva.id?'active':''}" onclick="selFornTab(${l.id},${c.id})">
+          <span class="tab-dot" style="background:${dotCor}"></span>${c.fornecedor_nome}
+          ${pend>0?`<span class="tab-badge">${pend}</span>`:''}
+        </button>`;
+      }).join('')}</div>`;
+
+      const resps=respostasPorCot[cotAtiva.id]||[];
+      const totalAprov=resps.reduce((s,r)=>r.status_aprovacao==='negado'||!r.preco_ofertado?s:s+(r.preco_ofertado||0)*(r.qtd_aprovada||0),0);
+      const pend=resps.filter(r=>r.status_aprovacao==='pendente'&&r.preco_ofertado).length;
+      const podeFinalizar=cotAtiva.status==='respondida'&&pend===0&&resps.length>0;
+      const itensAprov=resps.filter(r=>['aprovado','ajustado'].includes(r.status_aprovacao)&&r.preco_ofertado);
+
+      // Economia
+      if(respondidas.length>1&&encerrada){
+        let economia=0;
+        for(const item of itens){
+          const precos=respondidas.map(c=>(respostasPorCot[c.id]||[]).find(r=>r.item_id===item.id)?.preco_ofertado).filter(Boolean);
+          if(precos.length>1) economia+=(Math.max(...precos)-Math.min(...precos))*(menores[item.id]||0);
+        }
+        if(economia>0) html+=`<div class="economia-badge">💰 Economia estimada nas cotações: R$ ${economia.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+      }
+
+      if(!encerrada){
+        html+=`<div class="detail-actions">
+          <button class="act-btn green" onclick="aprovarTudo(${cotAtiva.id})">✓ Aprovar Tudo</button>
+          ${itensAprov.length>0?`<button class="act-btn wa" onclick="abrirWAModal(${l.id},${cotAtiva.id})">📱 WhatsApp</button>`:''}
+          <button class="act-btn orange" onclick="finalizarLista(${l.id})" ${!podeFinalizar?'disabled':''}>Finalizar →</button>
+        </div>`;
+      } else {
+        html+=`<div class="detail-actions">
+          ${itensAprov.length>0?`<button class="act-btn wa" onclick="abrirWAModal(${l.id},${cotAtiva.id})" style="flex:2">📱 Gerar WhatsApp</button>`:''}
+          <span style="font-family:var(--mono);font-size:10px;color:var(--green);padding:8px">✓ ENCERRADA</span>
+        </div>`;
+      }
+
+      // Itens da cotação ativa
+      html+=`<div class="detail-items-list">${itens.map(item=>{
+        const resp=resps.find(r=>r.item_id===item.id);
+        if(!resp) return `<div class="cot-item"><div class="ci-top"><div><div class="ci-nome">${item.produto}</div><div class="ci-cat">${item.categoria}</div></div><span class="sbadge sb-p">Sem resposta</span></div></div>`;
+        const naoTem=resp.qtd_disponivel===0&&!resp.preco_ofertado;
+        if(naoTem) return `<div class="cot-item neg"><div class="ci-top"><div><div class="ci-nome">${item.produto}</div><div class="ci-cat">${item.categoria}</div></div><span class="sbadge sb-n">Não tem</span></div></div>`;
+        const cls=resp.status_aprovacao==='aprovado'?'apr':resp.status_aprovacao==='negado'?'neg':resp.status_aprovacao==='ajustado'?'ajust':'';
+        const sbCls={pendente:'sb-p',aprovado:'sb-a',negado:'sb-n',ajustado:'sb-j'}[resp.status_aprovacao]||'sb-p';
+        const sbTxt={pendente:'Pendente',aprovado:'Aprovado',negado:'Negado',ajustado:'Ajustado'}[resp.status_aprovacao]||'Pendente';
+        const qtdAprov=resp.qtd_aprovada??item.qtd_desejada;
+        const isBest=menores[item.id]&&resp.preco_ofertado===menores[item.id];
+        return `<div class="cot-item ${cls}">
+          <div class="ci-top"><div><div class="ci-nome">${item.produto}${isBest?' 👑':''}</div><div class="ci-cat">${item.categoria}</div></div><span class="sbadge ${sbCls}">${sbTxt}</span></div>
+          ${resp.observacao?`<div style="font-size:11px;color:var(--muted);margin-bottom:7px;font-style:italic">"${resp.observacao}"</div>`:''}
+          <div class="ci-nums">
+            <div><div class="cn-label">Solicitado</div><div class="cn-val muted">${item.qtd_desejada}</div></div>
+            <div><div class="cn-label">Disponível</div><div class="cn-val">${resp.qtd_disponivel??'—'}</div></div>
+            <div><div class="cn-label">Preço Unit.</div><div class="cn-val price ${isBest?'best':''}">R$ ${Number(resp.preco_ofertado).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+            <div><div class="cn-label">Total</div><div class="cn-val">R$ ${(resp.preco_ofertado*(resp.qtd_disponivel||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+          </div>
+          ${!encerrada?`<div class="ci-actions">
+            <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">Aprov:</span>
+            <input class="qa-input" type="number" min="0" value="${qtdAprov}" id="qa-${resp.id}">
+            <button class="mbtn apr ${['aprovado','ajustado'].includes(resp.status_aprovacao)?'on':''}" onclick="setStatus(${resp.id},${cotAtiva.id},'aprovar')">✓ Aprov</button>
+            <button class="mbtn neg ${resp.status_aprovacao==='negado'?'on':''}" onclick="setStatus(${resp.id},${cotAtiva.id},'negar')">✕ Negar</button>
+          </div>`:''}
+        </div>`;
+      }).join('')}</div>
+      <div class="detail-total">
+        <div class="dt-row main"><span>Total aprovado (${cotAtiva.fornecedor_nome})</span><span>R$ ${totalAprov.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+      </div>`;
+    }
+  }
+
+  panel.innerHTML=html;
+}
+
+function buildComparativo(itens,cots,menores){
+  const respondidas=cots.filter(c=>c.status==='respondida');
+  if(!respondidas.length) return '<div style="padding:12px 16px;font-size:12px;color:var(--muted)">Aguardando respostas...</div>';
+  let html=`<table class="comp-table"><thead><tr>
+    <th>Produto</th><th>Qtd</th>
+    ${respondidas.map(c=>`<th>${c.fornecedor_nome}</th>`).join('')}
+    <th>Menor</th>
+  </tr></thead><tbody>`;
+  for(const item of itens){
+    const precos=respondidas.map(c=>{
+      const r=(respostasPorCot[c.id]||[]).find(x=>x.item_id===item.id);
+      return r?.preco_ofertado||null;
+    });
+    const validos=precos.filter(p=>p!==null);
+    const menor=validos.length>0?Math.min(...validos):null;
+    const maior=validos.length>1?Math.max(...validos):null;
+    html+=`<tr>
+      <td><div style="font-weight:600;font-size:12px">${item.produto}</div><div style="font-family:var(--mono);font-size:9px;color:var(--orange);text-transform:uppercase">${item.categoria}</div></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${item.qtd_desejada}</td>
+      ${precos.map(p=>{
+        if(p===null) return `<td><span class="price-none">—</span></td>`;
+        const cls=p===menor?'price-best':p===maior&&validos.length>1?'price-worst':'price-mid';
+        return `<td><span class="${cls}">R$ ${Number(p).toLocaleString('pt-BR',{minimumFractionDigits:2})}${p===menor?' 👑':''}</span></td>`;
+      }).join('')}
+      <td><span class="price-best">${menor?'R$ '+Number(menor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</span></td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  return html;
+}
+
+function toggleComp(btn){
+  compAberto=!compAberto;
+  btn.classList.toggle('open',compAberto);
+  btn.querySelector('span').textContent=compAberto?'▲':'▼';
+  document.querySelector('.comp-panel')?.classList.toggle('open',compAberto);
+}
+
+function selFornTab(listaId,cotId){fornTabSel[listaId]=cotId;renderDetalhe();}
+
+// AÇÕES
+async function aprovarLista(id){
+  try{
+    await req(`/rest/v1/listas?id=eq.${id}`,'PATCH',{status:'aprovada',aprovado_em:new Date().toISOString()});
+    const l=listas.find(x=>x.id===id);if(l)l.status='aprovada';
+    listaSel=l;atualizarTopbar();atualizarContadores();renderLista();renderDetalhe();
+    toast('✓ Lista aprovada!','ok');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function rejeitarLista(id){
+  if(!confirm('Rejeitar esta lista?')) return;
+  try{
+    await req(`/rest/v1/listas?id=eq.${id}`,'PATCH',{status:'rejeitada'});
+    const l=listas.find(x=>x.id===id);if(l)l.status='rejeitada';
+    listaSel=l;atualizarContadores();renderLista();renderDetalhe();
+    toast('Lista rejeitada.','');
+  }catch(e){toast('Erro.','err');}
+}
+
+async function setStatus(respId,cotId,acao){
+  const qtdInput=document.getElementById(`qa-${respId}`);
+  const qtd=qtdInput?Number(qtdInput.value):null;
+  const resp=findResp(respId);if(!resp)return;
+  const novo=acao==='negar'?'negado':(qtd!==null&&qtd!==resp.qtd_disponivel?'ajustado':'aprovado');
+  try{
+    await req(`/rest/v1/respostas?id=eq.${respId}`,'PATCH',{status_aprovacao:novo,qtd_aprovada:acao==='negar'?0:qtd});
+    resp.status_aprovacao=novo;resp.qtd_aprovada=acao==='negar'?0:qtd;
+    renderDetalhe();
+    toast(acao==='negar'?'Item negado.':'✓ Aprovado!',acao==='negar'?'err':'ok');
+  }catch(e){toast('Erro.','err');}
+}
+
+async function aprovarTudo(cotId){
+  const resps=Object.values(respostasPorCot).flat().filter(r=>r.cotacao_id===cotId&&r.status_aprovacao==='pendente'&&r.preco_ofertado);
+  if(!resps.length){toast('Nenhum item pendente.');return;}
+  try{
+    for(const r of resps){
+      const qtdInput=document.getElementById(`qa-${r.id}`);
+      const qtd=qtdInput?Number(qtdInput.value):r.qtd_disponivel;
+      await req(`/rest/v1/respostas?id=eq.${r.id}`,'PATCH',{status_aprovacao:'aprovado',qtd_aprovada:qtd});
+      r.status_aprovacao='aprovado';r.qtd_aprovada=qtd;
+    }
+    renderDetalhe();toast(`✓ ${resps.length} itens aprovados!`,'ok');
+  }catch(e){toast('Erro.','err');}
+}
+
+async function finalizarLista(listaId){
+  if(!confirm('Finalizar esta lista? O gerente verá o resultado.')) return;
+  try{
+    await req(`/rest/v1/listas?id=eq.${listaId}`,'PATCH',{status:'encerrada',encerrado_em:new Date().toISOString()});
+    const l=listas.find(x=>x.id===listaId);if(l)l.status='encerrada';
+    listaSel=l;atualizarTopbar();atualizarContadores();renderLista();renderDetalhe();
+    toast('✓ Lista encerrada!','ok');
+  }catch(e){toast('Erro.','err');}
+}
+
+// FORNECEDORES
+function abrirModalForn(listaId){
+  listaIdParaLinks=listaId;
+  fornRows=1;
+  document.getElementById('forn-list').innerHTML=`<div class="forn-row" id="forn-row-0">
+    <input type="text" placeholder="Nome do fornecedor" id="forn-nome-0">
+    <input type="text" placeholder="WhatsApp (opcional)" id="forn-contato-0" style="max-width:160px">
+  </div>`;
+  document.getElementById('modal-forn').classList.add('open');
+}
+
+function addFornRow(){
+  const idx=fornRows++;
+  const div=document.createElement('div');
+  div.className='forn-row';
+  div.innerHTML=`<input type="text" placeholder="Nome do fornecedor" id="forn-nome-${idx}">
+    <input type="text" placeholder="WhatsApp (opcional)" id="forn-contato-${idx}" style="max-width:160px">
+    <button class="rem-forn" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('forn-list').appendChild(div);
+}
+
+async function gerarLinks(){
+  const rows=document.querySelectorAll('.forn-row');
+  const fornecedores=[];
+  rows.forEach(row=>{
+    const nome=row.querySelector('input:first-child')?.value.trim();
+    const contato=row.querySelector('input:nth-child(2)')?.value.trim();
+    if(nome) fornecedores.push({nome,contato});
+  });
+  if(!fornecedores.length){toast('Informe pelo menos um fornecedor.','err');return;}
+  try{
+    const links=[];
+    for(const f of fornecedores){
+      const token=gerarToken();
+      await req('/rest/v1/cotacoes','POST',{lista_id:listaIdParaLinks,fornecedor_nome:f.nome,fornecedor_contato:f.contato||null,token,status:'pendente',criado_em:new Date().toISOString()});
+      links.push({...f,token,url:`${BASE_URL}?token=${token}`});
+    }
+    // Atualizar para verificar se precisa mudar status
+    const l=listas.find(x=>x.id===listaIdParaLinks);
+    if(l&&l.status==='aprovada'){
+      await req(`/rest/v1/listas?id=eq.${listaIdParaLinks}`,'PATCH',{status:'enviada'});
+      l.status='enviada';
+    }
+    fecharModal('modal-forn');
+    // Recarregar cotações
+    const cots=await req(`/rest/v1/cotacoes?lista_id=eq.${listaIdParaLinks}&order=criado_em.asc`);
+    cotacoesPorLista[listaIdParaLinks]=cots;
+    renderLista();renderDetalhe();
+    mostrarLinks(links);
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function mostrarLinks(links){
+  document.getElementById('links-body').innerHTML=links.map(l=>`<div class="link-box">
+    <div class="link-forn">${l.nome}${l.contato?` <span style="font-weight:400;color:var(--muted);font-size:11px">· ${l.contato}</span>`:''}</div>
+    <div class="link-url">${l.url}</div>
+    <div class="link-btns">
+      <button class="link-copy" onclick="navigator.clipboard.writeText('${l.url}').then(()=>toast('✓ Copiado!','ok'))">📋 Copiar</button>
+      <button class="link-wa" onclick="window.open('https://wa.me/${l.contato?'55'+l.contato.replace(/\\D/g,''):''}?text=${encodeURIComponent('Olá '+l.nome+'! Segue o link para cotação Fênix: '+l.url)}','_blank')">📱 WhatsApp</button>
+    </div>
+  </div>`).join('');
+  document.getElementById('modal-links').classList.add('open');
+}
+
+// WHATSAPP
+function abrirWAModal(listaId,cotId){
+  const l=listas.find(x=>x.id===listaId);
+  const cot=Object.values(cotacoesPorLista).flat().find(c=>c.id===cotId);
+  const itens=itensPorLista[listaId]||[];
+  const resps=(respostasPorCot[cotId]||[]).filter(r=>['aprovado','ajustado'].includes(r.status_aprovacao)&&r.preco_ofertado);
+  if(!resps.length){toast('Nenhum item aprovado.','err');return;}
+  const data=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  let msg=`*PEDIDO FÊNIX — ${l?.loja||''}*\n📅 ${data}\n👤 Fornecedor: ${cot?.fornecedor_nome||''}\n─────────────────`;
+  let total=0;
+  for(const resp of resps){
+    const item=itens.find(i=>i.id===resp.item_id);
+    if(!item)continue;
+    const qtd=resp.qtd_aprovada||0,preco=resp.preco_ofertado||0,sub=qtd*preco;
+    total+=sub;
+    msg+=`\n\n📦 *${item.produto}*\n   Qtd: ${qtd} un\n   Preço unit.: R$ ${Number(preco).toLocaleString('pt-BR',{minimumFractionDigits:2})}\n   Subtotal: R$ ${sub.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  }
+  msg+=`\n─────────────────\n💰 *TOTAL GERAL: R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}*\n\nAguardamos confirmação. Obrigado!`;
+  waMsgAtual=msg; waContatoAtual=cot?.fornecedor_contato||'';
+  document.getElementById('wa-sub').textContent=`${resps.length} item(s) para ${cot?.fornecedor_nome}`;
+  document.getElementById('wa-preview').textContent=msg;
+  document.getElementById('modal-wa').classList.add('open');
+}
+
+function copiarWA(){navigator.clipboard.writeText(waMsgAtual).then(()=>toast('✓ Copiado!','ok'));}
+function abrirWA(){const num=waContatoAtual.replace(/\D/g,'');window.open(`https://wa.me/${num?'55'+num:''}?text=${encodeURIComponent(waMsgAtual)}`,'_blank');}
+
+function findResp(id){for(const cid in respostasPorCot){const r=respostasPorCot[cid].find(x=>x.id===id);if(r)return r;}return null;}
+function fecharModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+function toast(msg,tipo=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+tipo;setTimeout(()=>el.className='toast',2600);}
+function tick(){const el=document.getElementById('topbar-time');if(el)el.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+
+carregarTudo();
+setInterval(carregarTudo,30000);
+setInterval(tick,1000);
+tick();
+</script>
+</body>
+</html>
